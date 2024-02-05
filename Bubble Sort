@@ -1,0 +1,64 @@
+import pyglet
+from pyglet import shapes
+from pyglet.text import Label
+import random
+
+def lerp(start, end, t):
+    return int((1 - t) * start + t * end)
+
+window = pyglet.window.Window(800, 600)
+
+data_size = 25
+bar_width = window.width // data_size
+bar_heights = [random.randint(50, 400) for _ in range(data_size)]
+
+start_color = (255, 182, 193, 255)  # สีชมพูอ่อน ฟ้า (Pale Pink)
+end_color = (219, 112, 219, 255)    # สีม่วงอ่อน (Pale Purple)
+
+current_index = 0
+sorted_index = data_size
+
+def bubble_sort_step():
+    global current_index, sorted_index
+    if current_index < sorted_index - 1:
+        if bar_heights[current_index] > bar_heights[current_index + 1]:
+            # สลับค่า
+            bar_heights[current_index], bar_heights[current_index + 1] = (
+                bar_heights[current_index + 1],
+                bar_heights[current_index],
+            )
+        current_index += 1
+    else:
+        current_index = 0
+        sorted_index -= 1
+
+def update(dt):
+    bubble_sort_step()
+
+@window.event
+def on_draw():
+    window.clear()
+
+    for i, height in enumerate(bar_heights):
+        # คำนวณสีในการไล่สี
+        lerp_factor = i / data_size
+        color = (
+            lerp(start_color[0], end_color[0], lerp_factor),
+            lerp(start_color[1], end_color[1], lerp_factor),
+            lerp(start_color[2], end_color[2], lerp_factor),
+            lerp(start_color[3], end_color[3], lerp_factor),
+        )
+
+        if i == current_index or i == current_index + 1:
+            color = (255, 255, 255, 255)
+
+        shapes.Rectangle(
+            i * bar_width,
+            0,
+            bar_width,
+            height,
+            color=color,
+        ).draw()
+
+pyglet.clock.schedule_interval(update, 1 / 60.0)
+pyglet.app.run()
