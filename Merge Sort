@@ -1,0 +1,81 @@
+import pyglet
+from pyglet import shapes
+import random
+
+def lerp(start, end, t):
+    return int((1 - t) * start + t * end)
+
+window = pyglet.window.Window(800, 600)
+
+data_size = 30
+bar_width = window.width // data_size
+bar_heights = [random.randint(50, 400) for _ in range(data_size)]
+
+start_color = (173, 216, 230, 255)  
+end_color = (255, 255, 153, 255)    
+
+merge_sort_frames = []
+merge_sort_data = bar_heights.copy()
+
+def update(dt):
+    if merge_sort_frames:
+        start, end, merged_array = merge_sort_frames.pop(0)
+        merge_sort_data[start:end] = merged_array
+
+@window.event
+def on_draw():
+    window.clear()
+
+    for i, height in enumerate(merge_sort_data):
+       
+        lerp_factor = i / data_size
+        color = (
+            lerp(start_color[0], end_color[0], lerp_factor),
+            lerp(start_color[1], end_color[1], lerp_factor),
+            lerp(start_color[2], end_color[2], lerp_factor),
+            lerp(start_color[3], end_color[3], lerp_factor),
+        )
+
+        shapes.Rectangle(
+            i * bar_width,
+            0,
+            bar_width,
+            height,
+            color=color,
+        ).draw()
+        
+
+
+def merge_sort(arr, start, end):
+    if end - start > 1:
+        mid = (start + end) // 2
+        merge_sort(arr, start, mid)
+        merge_sort(arr, mid, end)
+
+        merged_array = merge(arr[start:mid], arr[mid:end])
+        merge_sort_frames.append((start, end, merged_array.copy()))
+
+        for i in range(len(merged_array)):
+            arr[start + i] = merged_array[i]
+
+def merge(left, right):
+    merged = []
+    i = j = 0
+
+    while i < len(left) and j < len(right):
+        if left[i] < right[j]:
+            merged.append(left[i])
+            i += 1
+        else:
+            merged.append(right[j])
+            j += 1
+
+    merged.extend(left[i:])
+    merged.extend(right[j:])
+    
+    return merged
+
+
+pyglet.clock.schedule_interval(update, 1 / 60.0)
+merge_sort(merge_sort_data, 0, data_size)
+pyglet.app.run()
